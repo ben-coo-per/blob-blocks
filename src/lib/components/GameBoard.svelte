@@ -1,41 +1,45 @@
 <script lang="ts">
-	import { game } from '../stores/game';
+	import { game, BOARD_SIZE } from '../stores/game';
 </script>
 
-<div class="grid grid-cols-9 gap-px w-full aspect-square p-3 sm:p-0 rounded-lg">
-	{#each $game.boardState as val, i}
-		<button
-			on:click={() => game.cellClick(i)}
-			class={`
-            cursor-pointer
-            p-4
-            shadow shadow-surface-500
-            bg-surface-50-900-token 
-            bg-primary-hover-token
-            border border-surface-400-500-token
-            ${i == 0 && 'rounded-tl-container-token '} 
-            ${i == 8 && 'rounded-tr-container-token '} 
-            ${i == 72 && 'rounded-bl-container-token '} 
-            ${i == 80 && 'rounded-br-container-token '} 
-            ${i >= 72 && 'shadow-xl '} 
-            `}
-		>
-			{#if $game.currentTurn.moves.map((m) => m.cell).includes(i)}
-				<div
-					class={`circle ${
-						$game.currentTurn.playerIndex === 0
-							? 'bg-primary-600-300-token'
-							: 'bg-secondary-600-300-token'
-					}`}
-				/>
-			{:else if val !== null}
-				<div
-					class={`square ${
-						val && val > 0 ? 'bg-secondary-600-300-token' : 'bg-primary-600-300-token'
-					}`}
-				/>
-			{/if}
-		</button>
+<div class="grid grid-cols-5 gap-px w-full aspect-square p-3 sm:p-0 rounded-lg">
+	{#each $game.boardState as columns, row}
+		{#each columns as val, col}
+			<button
+				on:click={() => game.cellClick(row, col)}
+				class={`
+		cursor-pointer
+		p-4
+		shadow shadow-surface-500
+		bg-surface-50-900-token 
+		bg-primary-hover-token
+		border border-surface-400-500-token
+		${col == 0 && row == 0 && 'rounded-tl-container-token '} 
+		${col + 1 == BOARD_SIZE && row == 0 && 'rounded-tr-container-token '} 
+		${col == 0 && row + 1 == BOARD_SIZE && 'rounded-bl-container-token '} 
+		${col + 1 == BOARD_SIZE && row + 1 == BOARD_SIZE && 'rounded-br-container-token '} 
+		${row + 1 == BOARD_SIZE && 'shadow-xl '} 
+		`}
+			>
+				{#if $game.currentTurn.moves
+					.map((m) => m.cell && m.cell[0] == row && m.cell[1] == col)
+					.includes(true)}
+					<div
+						class={`circle ${
+							$game.currentTurn.playerIndex === 0
+								? 'bg-primary-600-300-token'
+								: 'bg-secondary-600-300-token'
+						}`}
+					/>
+				{:else if val !== null}
+					<div
+						class={`square ${
+							val && val > 0 ? 'bg-secondary-600-300-token' : 'bg-primary-600-300-token'
+						}`}
+					/>
+				{/if}
+			</button>
+		{/each}
 	{/each}
 </div>
 
