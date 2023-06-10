@@ -1,11 +1,22 @@
 <script>
-	import GameBoard from '$lib/components/GameBoard.svelte';
-	import { LightSwitch } from '@skeletonlabs/skeleton';
+	import Game from '$lib/components/Game.svelte';
+	import { LightSwitch, AppBar } from '@skeletonlabs/skeleton';
 </script>
 
-<div class="fixed top-0 w-full p-2 flex flex-row-reverse">
-	<LightSwitch />
+<div class="fixed top-0 w-full">
+	<AppBar>
+		<svelte:fragment slot="lead"
+			><h1 class="gradient-heading uppercase text-xl select-none">Blob Blocks</h1></svelte:fragment
+		>
+		<svelte:fragment slot="trail"><LightSwitch /></svelte:fragment>
+	</AppBar>
 </div>
-<div class="container max-w-md h-full mx-auto flex justify-center items-center">
-	<GameBoard />
-</div>
+<Game />
+
+<style>
+	.gradient-heading {
+		@apply bg-clip-text text-transparent box-decoration-clone;
+		@apply bg-gradient-to-br;
+		@apply from-primary-500 to-secondary-500;
+	}
+</style>
