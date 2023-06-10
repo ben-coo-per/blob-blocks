@@ -20,17 +20,18 @@
             ${i >= 72 && 'shadow-xl '} 
             `}
 		>
-			<div
-				class={`${val !== null && 'square'} ${
-					val && val > 0 ? 'bg-secondary-600-300-token' : 'bg-primary-600-300-token'
-				}`}
-			/>
 			{#if $game.currentTurn.moves.map((m) => m.cell).includes(i)}
 				<div
 					class={`circle ${
 						$game.currentTurn.playerIndex === 0
 							? 'bg-primary-600-300-token'
 							: 'bg-secondary-600-300-token'
+					}`}
+				/>
+			{:else if val !== null}
+				<div
+					class={`square ${
+						val && val > 0 ? 'bg-secondary-600-300-token' : 'bg-primary-600-300-token'
 					}`}
 				/>
 			{/if}

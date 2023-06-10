@@ -37,8 +37,8 @@ function createGame() {
 		reset: () => set(INITIAL_STATE),
 		cellClick: (index: number) => {
 			update((game) => {
-				// check if the cell is already taken
-				if (game.boardState[index] !== null) return game;
+				// check if the cell is already taken by the current player
+				if (game.boardState[index] === game.currentTurn.playerIndex) return game;
 
 				// check if the cell is adjacent to an existing tile
 				if (!cellIsAdjacentToExistingTile(game, index)) return game;
@@ -53,12 +53,22 @@ function createGame() {
 					return game;
 				}
 
-				// update the next available move
+				// check if the turn has any moves left
 				const nextMoveIndex = game.currentTurn.moves.findIndex((move) => move.cell === null);
 				if (nextMoveIndex === -1) return game;
 
-				// update this move
-				game.currentTurn.moves[nextMoveIndex].cell = index;
+				// check if the cell is already taken by another player
+				if (game.boardState[index] !== null) {
+					// check if the user has at least 2 moves left
+					if (game.currentTurn.moves.filter((move) => move.cell === null).length < 2) return game;
+
+					// update the next 2 available moves
+					game.currentTurn.moves[nextMoveIndex].cell = index;
+					game.currentTurn.moves[nextMoveIndex + 1].cell = index;
+				} else {
+					// update the next available move
+					game.currentTurn.moves[nextMoveIndex].cell = index;
+				}
 
 				return game;
 			});
