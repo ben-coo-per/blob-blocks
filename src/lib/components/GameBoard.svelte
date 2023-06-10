@@ -21,7 +21,7 @@
             `}
 		>
 			<div
-				class={`${val !== null && 'circle'} ${
+				class={`${val !== null && 'square'} ${
 					val && val > 0 ? 'bg-secondary-600-300-token' : 'bg-primary-600-300-token'
 				}`}
 			/>
@@ -44,5 +44,11 @@
 		width: 100%;
 		height: 100%;
 		border-radius: 50%;
+	}
+
+	.square {
+		@apply shadow-md shadow-surface-500;
+		width: 100%;
+		height: 100%;
 	}
 </style>

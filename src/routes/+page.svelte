@@ -4,7 +4,7 @@
 </script>
 
 <div class="fixed top-0 w-full">
-	<AppBar>
+	<AppBar class="shadow-lg">
 		<svelte:fragment slot="lead"
 			><h1 class="gradient-heading uppercase text-xl select-none">Blob Blocks</h1></svelte:fragment
 		>

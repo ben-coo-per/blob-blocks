@@ -40,6 +40,9 @@ function createGame() {
 				// check if the cell is already taken
 				if (game.boardState[index] !== null) return game;
 
+				// check if the cell is adjacent to an existing tile
+				if (!cellIsAdjacentToExistingTile(game, index)) return game;
+
 				// check if one of the players moves is already in this cell
 				if (game.currentTurn.moves.some((move) => move.cell === index)) {
 					// remove the move from the current turn
@@ -80,3 +83,39 @@ function createGame() {
 }
 
 export const game = createGame();
+
+const cellIsAdjacentToExistingTile = (game: Game, index: number) => {
+	// TODO: optimize this function
+	// the way I should probably be doing this is:
+	// 1. get an array of all the valid moves for the current turn (i.e. all the cells that are adjacent to an existing tile)
+	//	 a. this list can be cached and updated whenever a move is made OR we could calculate using array methods
+	//   b. this list can also be used for UI purposes (e.g. highlighting valid moves)
+	// 2. check if the cell is in that array
+
+	// check if the cell is adjacent to an existing tile
+	const existingMoves: number[] = [
+		...getAllIndexes(game.boardState, game.currentTurn.playerIndex),
+		...(game.currentTurn.moves.map((move) => move.cell) as number[])
+	].filter((move) => move !== null);
+
+	if (existingMoves.length === 0) return true;
+
+	return existingMoves.some((move) => {
+		return (
+			index === move - 1 || // is left
+			index === move + 1 || // is right
+			index === move - BOARD_SIZE || // is above
+			index === move + BOARD_SIZE // is below
+		);
+	});
+};
+
+function getAllIndexes(arr: (number | null)[], val: number) {
+	const indexes: number[] = [];
+
+	let i = -1;
+	while ((i = arr.indexOf(val, i + 1)) != -1) {
+		indexes.push(i);
+	}
+	return indexes;
+}
