@@ -1,6 +1,5 @@
 <script lang="ts">
 	import GameBoard from '$lib/components/GameBoard.svelte';
-	import MoveIndicator from '$lib/components/MoveIndicator.svelte';
 	import { game } from '$lib/stores/game';
 
 	$: currentTurn = $game.currentTurn;
@@ -12,12 +11,9 @@
 
 	<div class="flex flex-col justify-center items-center gap-4">
 		<div>
-			<h1 class="text-2xl font-bold text-center">Remaining moves</h1>
-			<div class="flex flex-row-reverse justify-center gap-4">
-				{#each currentTurn.moves.sort((m) => (m.cell === null ? 1 : -1)) as move, index}
-					<MoveIndicator {index} bind:move />
-				{/each}
-			</div>
+			<h1 class="text-2xl font-bold text-center">
+				{currentTurn.moves.filter((m) => !m.cell).length} remaining moves
+			</h1>
 		</div>
 		<button
 			type="button"

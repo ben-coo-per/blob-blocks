@@ -1,11 +1,31 @@
 import { writable } from 'svelte/store';
 import { NUMBER_OF_PLAYERS } from './player';
 
-const BOARD_SIZE = 9;
+export const BOARD_SIZE = 5;
+const INITIAL_BOARD_STATE = () => {
+	// create a 2D array of nulls of size BOARD_SIZE x BOARD_SIZE
+	const board: (number | null)[][] = [];
+
+	for (let i = 0; i < BOARD_SIZE; i++) {
+		board[i] = [];
+		for (let j = 0; j < BOARD_SIZE; j++) {
+			board[i][j] = null;
+		}
+	}
+
+	// set the bottom left to player 1
+	board[BOARD_SIZE - 1][0] = 0;
+
+	// set the top right to player 2
+	board[0][BOARD_SIZE - 1] = 1;
+
+	return board;
+};
+
 export const NUM_MOVES_PER_TURN = 3;
 
 export type Move = {
-	cell: number | null;
+	cell: [number, number] | null;
 };
 
 export type Turn = {
@@ -14,7 +34,7 @@ export type Turn = {
 };
 
 export type Game = {
-	boardState: (number | null)[];
+	boardState: (number | null)[][]; // 2D array of player indexes
 	currentTurn: Turn;
 };
 
@@ -22,7 +42,7 @@ export const turns = writable<Turn[]>([]);
 
 function createGame() {
 	const INITIAL_STATE: Game = {
-		boardState: Array(BOARD_SIZE ** 2).fill(null),
+		boardState: INITIAL_BOARD_STATE(),
 		currentTurn: {
 			playerIndex: 0,
 			moves: [{ cell: null }, { cell: null }, { cell: null }]
@@ -35,40 +55,44 @@ function createGame() {
 		subscribe,
 		update,
 		reset: () => set(INITIAL_STATE),
-		cellClick: (index: number) => {
+		cellClick: (row: number, col: number) => {
 			update((game) => {
+				const cellIsAlreadySelectedInThisTurn = (move: Move) =>
+					move.cell && move.cell[0] === row && move.cell[1] === col;
+
 				// check if the cell is already taken by the current player
-				if (game.boardState[index] === game.currentTurn.playerIndex) return game;
+				if (game.boardState[row][col] === game.currentTurn.playerIndex) return game;
 
 				// check if the cell is adjacent to an existing tile
-				if (!cellIsAdjacentToExistingTile(game, index)) return game;
+				if (!cellIsAdjacentToExistingTile(game, [row, col])) return game;
 
 				// check if one of the players moves is already in this cell
-				if (game.currentTurn.moves.some((move) => move.cell === index)) {
+				if (game.currentTurn.moves.some((move) => cellIsAlreadySelectedInThisTurn(move))) {
 					// remove the move from the current turn
 					game.currentTurn.moves = game.currentTurn.moves.map((move) => {
-						if (move.cell === index) return { cell: null };
+						if (cellIsAlreadySelectedInThisTurn(move)) return { cell: null };
 						return move;
 					}) as [Move, Move, Move];
 					return game;
 				}
-
 				// check if the turn has any moves left
 				const nextMoveIndex = game.currentTurn.moves.findIndex((move) => move.cell === null);
+				console.log(nextMoveIndex);
 				if (nextMoveIndex === -1) return game;
 
 				// check if the cell is already taken by another player
-				if (game.boardState[index] !== null) {
+				if (game.boardState[row][col] !== null) {
 					// check if the user has at least 2 moves left
 					if (game.currentTurn.moves.filter((move) => move.cell === null).length < 2) return game;
 
 					// update the next 2 available moves
-					game.currentTurn.moves[nextMoveIndex].cell = index;
-					game.currentTurn.moves[nextMoveIndex + 1].cell = index;
+					game.currentTurn.moves[nextMoveIndex].cell = [row, col];
+					game.currentTurn.moves[nextMoveIndex + 1].cell = [row, col];
 				} else {
 					// update the next available move
-					game.currentTurn.moves[nextMoveIndex].cell = index;
+					game.currentTurn.moves[nextMoveIndex].cell = [row, col];
 				}
+				console.log('called');
 
 				return game;
 			});
@@ -81,7 +105,8 @@ function createGame() {
 
 				// update the board state
 				game.currentTurn.moves.forEach((move) => {
-					if (move.cell !== null) game.boardState[move.cell] = game.currentTurn.playerIndex;
+					if (move.cell !== null)
+						game.boardState[move.cell[0]][move.cell[1]] = game.currentTurn.playerIndex;
 					move.cell = null;
 				});
 				game.currentTurn.playerIndex = (game.currentTurn.playerIndex + 1) % NUMBER_OF_PLAYERS;
@@ -94,38 +119,29 @@ function createGame() {
 
 export const game = createGame();
 
-const cellIsAdjacentToExistingTile = (game: Game, index: number) => {
-	// TODO: optimize this function
-	// the way I should probably be doing this is:
-	// 1. get an array of all the valid moves for the current turn (i.e. all the cells that are adjacent to an existing tile)
-	//	 a. this list can be cached and updated whenever a move is made OR we could calculate using array methods
-	//   b. this list can also be used for UI purposes (e.g. highlighting valid moves)
-	// 2. check if the cell is in that array
+export const cellIsAdjacentToExistingTile = (game: Game, index: [number, number]) => {
+	// Reusable function to check if a given cell is adjacent to an existing tile
+	// this is used both in the UI to determine if a cell is clickable and in the
+	// game logic to determine if a move is valid
+	const [row, col] = index;
 
-	// check if the cell is adjacent to an existing tile
-	const existingMoves: number[] = [
-		...getAllIndexes(game.boardState, game.currentTurn.playerIndex),
-		...(game.currentTurn.moves.map((move) => move.cell) as number[])
-	].filter((move) => move !== null);
+	const adjacentCells = [
+		[row - 1, col], // top
+		[row + 1, col], // bottom
+		[row, col - 1], // left
+		[row, col + 1] // right
+	].filter(cellIsInBounds);
 
-	if (existingMoves.length === 0) return true;
-
-	return existingMoves.some((move) => {
-		return (
-			index === move - 1 || // is left
-			index === move + 1 || // is right
-			index === move - BOARD_SIZE || // is above
-			index === move + BOARD_SIZE // is below
+	return adjacentCells.some(([row, col]) => {
+		const existingTileInPreviousTurn = game.boardState[row][col] == game.currentTurn.playerIndex;
+		const tileInThisTurn = game.currentTurn.moves.some(
+			(move) => move.cell && move.cell[0] === row && move.cell[1] === col
 		);
+		return existingTileInPreviousTurn || tileInThisTurn;
 	});
 };
 
-function getAllIndexes(arr: (number | null)[], val: number) {
-	const indexes: number[] = [];
-
-	let i = -1;
-	while ((i = arr.indexOf(val, i + 1)) != -1) {
-		indexes.push(i);
-	}
-	return indexes;
-}
+const cellIsInBounds = (index: number[]) => {
+	const [row, col] = index;
+	return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
+};
