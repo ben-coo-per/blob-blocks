@@ -1,6 +1,6 @@
 <script lang="ts">
 	import GameBoard from '$lib/components/GameBoard.svelte';
-	import { game } from '$lib/stores/game';
+	import { game, remainingMoves } from '$lib/stores/game';
 
 	$: currentTurn = $game.currentTurn;
 </script>
@@ -12,7 +12,7 @@
 	<div class="flex flex-col justify-center items-center gap-4">
 		<div>
 			<h1 class="text-2xl font-bold text-center">
-				{currentTurn.moves.filter((m) => !m.cell).length} remaining moves
+				{$remainingMoves} remaining moves
 			</h1>
 		</div>
 		<button

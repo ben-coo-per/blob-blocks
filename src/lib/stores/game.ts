@@ -1,6 +1,9 @@
-import { writable } from 'svelte/store';
+import { derived, writable } from 'svelte/store';
 import { NUMBER_OF_PLAYERS } from './player';
+import type { Turn, Game, Move } from './types';
+import { cellIsAdjacentToExistingTile } from '$lib/utils/checks';
 
+export const NUM_MOVES_PER_TURN = 3;
 export const BOARD_SIZE = 5;
 const INITIAL_BOARD_STATE = () => {
 	// create a 2D array of nulls of size BOARD_SIZE x BOARD_SIZE
@@ -22,24 +25,7 @@ const INITIAL_BOARD_STATE = () => {
 	return board;
 };
 
-export const NUM_MOVES_PER_TURN = 3;
-
-export type Move = {
-	cell: [number, number] | null;
-};
-
-export type Turn = {
-	playerIndex: number;
-	moves: [Move, Move, Move];
-};
-
-export type Game = {
-	boardState: (number | null)[][]; // 2D array of player indexes
-	currentTurn: Turn;
-};
-
 export const turns = writable<Turn[]>([]);
-
 function createGame() {
 	const INITIAL_STATE: Game = {
 		boardState: INITIAL_BOARD_STATE(),
@@ -118,30 +104,6 @@ function createGame() {
 }
 
 export const game = createGame();
-
-export const cellIsAdjacentToExistingTile = (game: Game, index: [number, number]) => {
-	// Reusable function to check if a given cell is adjacent to an existing tile
-	// this is used both in the UI to determine if a cell is clickable and in the
-	// game logic to determine if a move is valid
-	const [row, col] = index;
-
-	const adjacentCells = [
-		[row - 1, col], // top
-		[row + 1, col], // bottom
-		[row, col - 1], // left
-		[row, col + 1] // right
-	].filter(cellIsInBounds);
-
-	return adjacentCells.some(([row, col]) => {
-		const existingTileInPreviousTurn = game.boardState[row][col] == game.currentTurn.playerIndex;
-		const tileInThisTurn = game.currentTurn.moves.some(
-			(move) => move.cell && move.cell[0] === row && move.cell[1] === col
-		);
-		return existingTileInPreviousTurn || tileInThisTurn;
-	});
-};
-
-const cellIsInBounds = (index: number[]) => {
-	const [row, col] = index;
-	return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
-};
+export const remainingMoves = derived(game, ($game) => {
+	return $game.currentTurn.moves.filter((move) => move.cell === null).length;
+});
