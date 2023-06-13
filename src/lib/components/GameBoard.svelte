@@ -23,7 +23,7 @@
 		${col + 1 == BOARD_SIZE && row == 0 && 'rounded-tr-container-token '} 
 		${col == 0 && row + 1 == BOARD_SIZE && 'rounded-bl-container-token '} 
 		${col + 1 == BOARD_SIZE && row + 1 == BOARD_SIZE && 'rounded-br-container-token '} 
-		${row + 1 == BOARD_SIZE && 'shadow-xl '} 
+		${row + 1 == BOARD_SIZE && 'shadow-lg '} 
 		`}
 			>
 				{#if $game.currentTurn.moves
