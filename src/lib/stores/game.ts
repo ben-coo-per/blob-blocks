@@ -41,29 +41,37 @@ function createGame() {
 		subscribe,
 		update,
 		reset: () => set(INITIAL_STATE),
+		undoLastMove: () => {
+			// undo the last move
+			update((game) => {
+				const currentTurn = game.currentTurn;
+				// last move is the last move with a cell value that is not null
+				const lastMove = currentTurn.moves.filter((move) => move.cell !== null).at(-1);
+
+				if (lastMove?.cell === null || !lastMove) return game;
+				// reset the last move
+				lastMove.cell = null;
+
+				return game;
+			});
+		},
 		cellClick: (row: number, col: number) => {
 			update((game) => {
 				const cellIsAlreadySelectedInThisTurn = (move: Move) =>
 					move.cell && move.cell[0] === row && move.cell[1] === col;
 
 				// check if the cell is already taken by the current player
-				if (game.boardState[row][col] === game.currentTurn.playerIndex) return game;
+				if (
+					game.boardState[row][col] === game.currentTurn.playerIndex ||
+					game.currentTurn.moves.some((move) => cellIsAlreadySelectedInThisTurn(move))
+				)
+					return game;
 
 				// check if the cell is adjacent to an existing tile
 				if (!cellIsAdjacentToExistingTile(game, [row, col])) return game;
 
-				// check if one of the players moves is already in this cell
-				if (game.currentTurn.moves.some((move) => cellIsAlreadySelectedInThisTurn(move))) {
-					// remove the move from the current turn
-					game.currentTurn.moves = game.currentTurn.moves.map((move) => {
-						if (cellIsAlreadySelectedInThisTurn(move)) return { cell: null };
-						return move;
-					}) as [Move, Move, Move];
-					return game;
-				}
 				// check if the turn has any moves left
 				const nextMoveIndex = game.currentTurn.moves.findIndex((move) => move.cell === null);
-				console.log(nextMoveIndex);
 				if (nextMoveIndex === -1) return game;
 
 				// check if the cell is already taken by another player
@@ -78,7 +86,6 @@ function createGame() {
 					// update the next available move
 					game.currentTurn.moves[nextMoveIndex].cell = [row, col];
 				}
-				console.log('called');
 
 				return game;
 			});
