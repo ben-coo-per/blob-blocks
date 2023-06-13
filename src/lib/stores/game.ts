@@ -21,26 +21,30 @@ const INITIAL_BOARD_STATE = () => {
 
 	// set the top right to player 2
 	board[0][BOARD_SIZE - 1] = 1;
-
 	return board;
 };
 
 export const turns = writable<Turn[]>([]);
 function createGame() {
-	const INITIAL_STATE: Game = {
-		boardState: INITIAL_BOARD_STATE(),
-		currentTurn: {
-			playerIndex: 0,
-			moves: [{ cell: null }, { cell: null }, { cell: null }]
-		}
-	};
+	const INITIAL_STATE = () =>
+		<Game>{
+			boardState: INITIAL_BOARD_STATE(),
+			currentTurn: {
+				playerIndex: 0,
+				moves: [{ cell: null }, { cell: null }, { cell: null }]
+			},
+			status: 'in-progress'
+		};
 
-	const { subscribe, set, update } = writable<Game>(INITIAL_STATE);
+	const { subscribe, set, update } = writable<Game>(INITIAL_STATE());
 
 	return {
 		subscribe,
 		update,
-		reset: () => set(INITIAL_STATE),
+		reset: () => {
+			// reset the game to the initial state
+			set(INITIAL_STATE());
+		},
 		undoLastMove: () => {
 			// undo the last move
 			update((game) => {
@@ -103,6 +107,9 @@ function createGame() {
 					move.cell = null;
 				});
 				game.currentTurn.playerIndex = (game.currentTurn.playerIndex + 1) % NUMBER_OF_PLAYERS;
+
+				// if there is no more moves left, end the game
+				if (game.boardState.flat().every((cell) => cell !== null)) game.status = 'finished';
 
 				return game;
 			});

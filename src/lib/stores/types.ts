@@ -14,4 +14,5 @@ export type Turn = {
 export type Game = {
 	boardState: (number | null)[][]; // 2D array of player indexes
 	currentTurn: Turn;
+	status: 'in-progress' | 'finished';
 };
